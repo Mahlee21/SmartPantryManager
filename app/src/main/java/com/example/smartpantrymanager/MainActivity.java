@@ -1,5 +1,6 @@
 package com.example.smartpantrymanager;
 
+import com.example.smartpantrymanager.model.PantryItem;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,25 +11,85 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatAcivity;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
     private DatabaseHelper db;
     private RecyclerView recycler;
     private TextView textEmpty;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle("My Pantry");
 
-        db= new DatabaseHelper(this);
-        recycler= findViewById(R.id.recyclerPantry);
-        textEmpty= findViewById(R,id,textEmpty);
+        db = new DatabaseHelper(this);
+        recycler = findViewById(R.id.recyclerPantry);
+        textEmpty = findViewById(R.id.textEmpty);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+
+        Button add = findViewById(R.id.buttonAdd);
+
+        add.setOnClickListener(v -> startActivity(new Intent(this, AddEditActivity.class)));
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadItems();
+    }
+
+    private void loadItems() {
+        List<PantryItem> items = db.getAllItems();
+        boolean alertsOn = getSharedPreferences("settings", Context.MODE_PRIVATE)
+                .getBoolean("expiryAlerts", true);
+
+        textEmpty.setVisibility(items.isEmpty() ? android.view.View.VISIBLE : android.view.View.GONE);
+        recycler.setAdapter(new PantryAdapter(items, alertsOn, new PantryAdapter.Listener() {
+
+            public void onEdit(PantryItem item) {
+                Intent i = new Intent(MainActivity.this, AddEditActivity.class);
+                i.putExtra("ITEM_ID", item.id);
+                startActivity(i);
+            }
+
+
+            public void onDelete(PantryItem item) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Delete ingredient")
+                        .setMessage("Remove " + item.name + " from your pantry?")
+                        .setPositiveButton("Delete", (d, w) -> {
+                            db.deleteItem(item.id);
+                            Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                            loadItems();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+        }));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_suggested) {
+            startActivity(new Intent(this, SuggestedActivity.class));
+            return true;
+        } else if (item.getItemId() == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
