@@ -1,4 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_suggested" android:title="Suggested Recipes"/>
+    <item
+        android:id="@+id/action_suggested"
+        android:title="Suggested Recipes"
+
+        android:layout_width = "match_parent"
+        android:layout_height = "wrap_content"
+        app:layout_ConstraintEnd_tEndOf=
+        app:layout_ConstraintStart_toStartOf =
+
+        />
     <item android:id="@+id/action_settings" android:title="Settings"/>
 </menu>
