@@ -5,9 +5,9 @@ A Java Android app that keeps track of the ingredients you have at home and sugg
 
 | | |
 |---|---|
-| **Student** | _Your name and student number_ |
+| **Student** | Aamahle Mthembu 402307995 |
 | **Language** | Java |
-| **Platform** | Android (Min SDK 24) |
+| **Platform** | Android  |
 | **Package** | `com.example.smartpantry` |
 | **Storage** | SQLite (`SQLiteOpenHelper`) and `SharedPreferences` |
 
