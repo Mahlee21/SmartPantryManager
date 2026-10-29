@@ -5,7 +5,7 @@ A Java Android app that keeps track of the ingredients you have at home and sugg
 
 | | |
 |---|---|
-| **Student** | Aamahle Mthembu 402307995 |
+| **Student** | Amahle Mthembu 402307995 |
 | **Language** | Java |
 | **Platform** | Android  |
 | **Package** | `com.example.smartpantry` |
