@@ -5,19 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import com.example.smartpantrymanager.model.PantryItem;
+import com.example.smartpantrymanager.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * SQLite storage. Three tables:
- *   pantry(id, name, quantity, unit, expiry)
- *   recipe(id, name, steps)
- *   recipe_ingredient(id, recipe_id -> recipe.id, name, quantity, unit)
- * Recipes are seeded once, in onCreate(), the first time the database is made.
- */
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "pantry.db";
     private static final int DB_VERSION = 1;
@@ -28,16 +20,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
         db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE pantry (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        db.execSQL("CREATE TABLE IF NOT EXISTS pantry (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "name TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL, expiry TEXT)");
-        db.execSQL("CREATE TABLE recipe (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        db.execSQL("CREATE TABLE IF NOT EXISTS recipe (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "name TEXT NOT NULL, steps TEXT NOT NULL)");
-        db.execSQL("CREATE TABLE recipe_ingredient (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        db.execSQL("CREATE TABLE IF NOT EXISTS recipe_ingredient (id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + "recipe_id INTEGER NOT NULL REFERENCES recipe(id) ON DELETE CASCADE, "
                 + "name TEXT NOT NULL, quantity REAL NOT NULL, unit TEXT NOT NULL)");
         seedRecipes(db);
@@ -51,34 +44,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-
     public long addItem(PantryItem i) {
+        if (i == null) return -1;
         return getWritableDatabase().insert("pantry", null, toValues(i));
     }
 
-
     public List<PantryItem> getAllItems() {
         List<PantryItem> list = new ArrayList<>();
-        Cursor c = getReadableDatabase().query("pantry", null, null, null, null, null, "name COLLATE NOCASE");
-        while (c.moveToNext()) list.add(fromCursor(c));
-        c.close();
+        try (Cursor c = getReadableDatabase().query("pantry", null, null, null, null, null, "name COLLATE NOCASE")) {
+            if (c != null) {
+                while (c.moveToNext()) {
+                    list.add(fromCursor(c));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
-
     public PantryItem getItem(long id) {
-        Cursor c = getReadableDatabase().query("pantry", null, "id = ?", new String[]{String.valueOf(id)},
-                null, null, null);
-        PantryItem item = c.moveToFirst() ? fromCursor(c) : null;
-        c.close();
+        PantryItem item = null;
+        try (Cursor c = getReadableDatabase().query("pantry", null, "id = ?", new String[]{String.valueOf(id)},
+                null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                item = fromCursor(c);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return item;
     }
 
-
     public int updateItem(PantryItem i) {
+        if (i == null) return 0;
         return getWritableDatabase().update("pantry", toValues(i), "id = ?", new String[]{String.valueOf(i.id)});
     }
-
 
     public int deleteItem(long id) {
         return getWritableDatabase().delete("pantry", "id = ?", new String[]{String.valueOf(id)});
@@ -86,10 +87,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private ContentValues toValues(PantryItem i) {
         ContentValues cv = new ContentValues();
-        cv.put("name", i.name);
+        cv.put("name", i.name != null ? i.name : "");
         cv.put("quantity", i.quantity);
-        cv.put("unit", i.unit);
-        cv.put("expiry", i.expiry);
+        cv.put("unit", i.unit != null ? i.unit : "pcs");
+        cv.put("expiry", i.expiry != null ? i.expiry : "");
         return cv;
     }
 
@@ -103,22 +104,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return i;
     }
 
-
-
     public List<Recipe> getAllRecipes() {
         SQLiteDatabase db = getReadableDatabase();
+        // Auto-heal: If database was created without recipes, reseed automatically
+        try (Cursor check = db.rawQuery("SELECT count(*) FROM recipe", null)) {
+            if (check.moveToFirst() && check.getInt(0) == 0) {
+                seedRecipes(db);
+            }
+        } catch (Exception ignored) {}
+
         List<Recipe> list = new ArrayList<>();
-        Cursor c = db.query("recipe", null, null, null, null, null, "name");
-        while (c.moveToNext()) list.add(recipeFromCursor(db, c));
-        c.close();
+        try (Cursor c = db.query("recipe", null, null, null, null, null, "name")) {
+            if (c != null) {
+                while (c.moveToNext()) {
+                    list.add(recipeFromCursor(db, c));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return list;
     }
 
     public Recipe getRecipe(long id) {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor c = db.query("recipe", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null);
-        Recipe r = c.moveToFirst() ? recipeFromCursor(db, c) : null;
-        c.close();
+        Recipe r = null;
+        try (Cursor c = db.query("recipe", null, "id = ?", new String[]{String.valueOf(id)}, null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                r = recipeFromCursor(db, c);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return r;
     }
 
@@ -127,20 +144,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         r.id = c.getLong(c.getColumnIndexOrThrow("id"));
         r.name = c.getString(c.getColumnIndexOrThrow("name"));
         r.steps = c.getString(c.getColumnIndexOrThrow("steps"));
-        Cursor ic = db.query("recipe_ingredient", null, "recipe_id = ?",
-                new String[]{String.valueOf(r.id)}, null, null, null);
-        while (ic.moveToNext()) {
-            Recipe.RecipeIngredient ri = new Recipe.RecipeIngredient();
-            ri.name = ic.getString(ic.getColumnIndexOrThrow("name"));
-            ri.quantity = ic.getDouble(ic.getColumnIndexOrThrow("quantity"));
-            ri.unit = ic.getString(ic.getColumnIndexOrThrow("unit"));
-            r.ingredients.add(ri);
+        try (Cursor ic = db.query("recipe_ingredient", null, "recipe_id = ?",
+                new String[]{String.valueOf(r.id)}, null, null, null)) {
+            if (ic != null) {
+                while (ic.moveToNext()) {
+                    Recipe.RecipeIngredient ri = new Recipe.RecipeIngredient();
+                    ri.name = ic.getString(ic.getColumnIndexOrThrow("name"));
+                    ri.quantity = ic.getDouble(ic.getColumnIndexOrThrow("quantity"));
+                    ri.unit = ic.getString(ic.getColumnIndexOrThrow("unit"));
+                    r.ingredients.add(ri);
+                }
+            }
         }
-        ic.close();
         return r;
     }
 
-    /** Ingredient format: "name:quantity:unit". */
     private static void addRecipe(SQLiteDatabase db, String name, String steps, String... ingredients) {
         ContentValues cv = new ContentValues();
         cv.put("name", name);
@@ -148,6 +166,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         long rid = db.insert("recipe", null, cv);
         for (String s : ingredients) {
             String[] p = s.split(":");
+            if (p.length < 3) continue;
             ContentValues ic = new ContentValues();
             ic.put("recipe_id", rid);
             ic.put("name", p[0]);

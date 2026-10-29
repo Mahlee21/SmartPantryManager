@@ -1,4 +1,5 @@
-package com.example.smartpantrymanager.model;
+package com.example.smartpantrymanager;
+
 public class PantryItem {
     public long id;
     public String name;
@@ -10,5 +11,3 @@ public class PantryItem {
         return q == Math.floor(q) ? String.valueOf((long) q) : String.valueOf(q);
     }
 }
-
-

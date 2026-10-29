@@ -9,7 +9,7 @@ public class Recipe {
     public String steps;
     public List<RecipeIngredient> ingredients = new ArrayList<>();
 
-    public static class RecipeIngredient{
+    public static class RecipeIngredient {
         public String name;
         public double quantity;
         public String unit;

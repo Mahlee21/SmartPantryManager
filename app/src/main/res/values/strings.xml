@@ -1,3 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SMARTpantryManager</string>
+    <string name="app_name">Smart Pantry</string>
+    <string name="add_ingredient">+ Add Ingredient</string>
+    <string name="save_ingredient">Save Ingredient</string>
+    <string name="pantry_empty_title">Your pantry is empty</string>
+    <string name="pantry_empty_sub">Add ingredients you have at home to discover matching recipes.</string>
+
+    <string-array name="units">
+        <item>g</item>
+        <item>kg</item>
+        <item>ml</item>
+        <item>l</item>
+        <item>tsp</item>
+        <item>tbsp</item>
+        <item>cup</item>
+        <item>pcs</item>
+    </string-array>
 </resources>

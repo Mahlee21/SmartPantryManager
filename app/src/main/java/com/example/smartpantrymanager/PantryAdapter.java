@@ -4,13 +4,13 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
-import com.example.smartpantrymanager.model.PantryItem;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -42,39 +42,75 @@ public class PantryAdapter extends RecyclerView.Adapter<PantryAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         PantryItem item = items.get(position);
-        h.name.setText(item.name);
-        h.qty.setText(PantryItem.fmt(item.quantity) + " " + item.unit);
+        h.name.setText(item.name != null ? item.name : "");
 
-        boolean hasExpiry = item.expiry != null && !item.expiry.isEmpty();
-        String expiryText = hasExpiry ? "Expires: " + item.expiry : "No expiry date";
-        h.expiry.setTextColor(Color.DKGRAY);
-        if (hasExpiry && alertsOn && daysLeft(item.expiry) <= 3) {
-            expiryText += daysLeft(item.expiry) < 0 ? "  (EXPIRED)" : "  (expiring soon!)";
-            h.expiry.setTextColor(Color.RED);
+        String unitStr = item.unit != null ? item.unit : "";
+        h.qty.setText(PantryItem.fmt(item.quantity) + " " + unitStr);
+
+        boolean hasExpiry = item.expiry != null && !item.expiry.trim().isEmpty();
+        if (!hasExpiry) {
+            h.expiry.setText("No expiry date");
+        } else {
+            int days = daysUntilExpiry(item.expiry);
+            if (alertsOn && days <= 3) {
+                if (days < 0) {
+                    h.expiry.setText("EXPIRED (" + item.expiry + ")");
+                    h.expiry.setTextColor(Color.RED);
+                } else if (days == 0) {
+                    h.expiry.setText("Expires today!");
+                    h.expiry.setTextColor(Color.RED);
+                } else {
+                    h.expiry.setText("Expires in " + days + " days");
+                    h.expiry.setTextColor(Color.rgb(200, 100, 0));
+                }
+            } else {
+                h.expiry.setText("Exp: " + item.expiry);
+                h.expiry.setTextColor(Color.DKGRAY);
+            }
         }
-        h.expiry.setText(expiryText);
 
         h.itemView.setOnClickListener(v -> listener.onEdit(item));
-        h.delete.setOnClickListener(v -> listener.onDelete(item));
+        if (h.delete != null) {
+            h.delete.setOnClickListener(v -> listener.onDelete(item));
+        }
     }
 
-    private long daysLeft(String expiry) {
+    private int daysUntilExpiry(String expiry) {
+        if (expiry == null || expiry.trim().isEmpty()) return Integer.MAX_VALUE;
         try {
-            Date d = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(expiry);
-            return (d.getTime() - System.currentTimeMillis()) / (24L * 60 * 60 * 1000);
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            f.setLenient(false);
+            Date targetDate = f.parse(expiry);
+            if (targetDate == null) return Integer.MAX_VALUE;
+
+            Calendar now = Calendar.getInstance();
+            now.set(Calendar.HOUR_OF_DAY, 0);
+            now.set(Calendar.MINUTE, 0);
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MILLISECOND, 0);
+
+            Calendar target = Calendar.getInstance();
+            target.setTime(targetDate);
+            target.set(Calendar.HOUR_OF_DAY, 0);
+            target.set(Calendar.MINUTE, 0);
+            target.set(Calendar.SECOND, 0);
+            target.set(Calendar.MILLISECOND, 0);
+
+            long diffMs = target.getTimeInMillis() - now.getTimeInMillis();
+            return (int) (diffMs / (24L * 60 * 60 * 1000));
         } catch (Exception e) {
-            return Long.MAX_VALUE;
+            return Integer.MAX_VALUE;
         }
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return items != null ? items.size() : 0;
     }
 
     static class VH extends RecyclerView.ViewHolder {
         TextView name, qty, expiry;
-        Button delete;
+        View delete;
 
         VH(View v) {
             super(v);

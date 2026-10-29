@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Header Banner -->
+
     <LinearLayout
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
@@ -14,10 +14,10 @@
         android:elevation="2dp"
         android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
+        android:paddingVertical="14dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Pantry Inventory"
             android:textColor="@color/text_primary"
@@ -25,7 +25,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Track available ingredients to discover matching recipes"
@@ -43,16 +43,10 @@
         android:orientation="vertical"
         android:padding="32dp">
 
-        <ImageView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:src="@drawable/ic_pantry" />
-
         <TextView
             android:id="@+id/textEmpty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:gravity="center"
             android:text="@string/pantry_empty_title"
             android:textColor="@color/text_primary"
@@ -69,7 +63,7 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-    <!-- Recycler List -->
+    <!-- Pantry RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerPantry"
         android:layout_width="match_parent"
@@ -80,7 +74,6 @@
         android:paddingTop="8dp"
         android:paddingBottom="12dp" />
 
-    <!-- Full-Width Bottom Button -->
     <LinearLayout
         android:id="@+id/layoutBottomBar"
         android:layout_width="match_parent"
@@ -94,16 +87,13 @@
         <Button
             android:id="@+id/buttonAdd"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:background="@drawable/bg_button_primary"
-            android:drawableStart="@drawable/ic_add"
-            android:drawablePadding="8dp"
-            android:gravity="center"
-            android:paddingHorizontal="16dp"
+            android:layout_height="52dp"
+            android:backgroundTint="@color/primary"
             android:text="@string/add_ingredient"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
+
 </RelativeLayout>
