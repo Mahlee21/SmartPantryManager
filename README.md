@@ -11,9 +11,7 @@ A Java Android app that keeps track of the ingredients you have at home and sugg
 | **Package** | `com.example.smartpantry` |
 | **Storage** | SQLite (`SQLiteOpenHelper`) and `SharedPreferences` |
 
-
- Features
-
+Features
 - **Pantry management (full CRUD):** add, view, edit and delete ingredients with a name, quantity, unit and optional expiry date.
 - **Input validation:** empty names, non-numeric or non-positive quantities, and badly formatted dates are rejected with a clear on-screen error.
 - **17 pre-loaded recipes**, created automatically the first time the app runs.
